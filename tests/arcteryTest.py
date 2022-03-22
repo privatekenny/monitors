@@ -1,4 +1,5 @@
-from main.arcftery import *
+from main.arcteryx import *
+from etc.config import *
 from bs4 import BeautifulSoup
 
 BASE_URL = 'https://www.usedgear.arcteryx.com'

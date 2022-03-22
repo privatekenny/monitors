@@ -38,12 +38,12 @@ used_arc_headers = {
 }
 
 
-def build_url(keyword):
+def build_url(search_key: str):
     """
     Builds Website Query Param
     :return:
     """
-    url = BASE_URL + SEARCH + keyword
+    url = BASE_URL + SEARCH + search_key
     return url
 
 
@@ -53,6 +53,7 @@ def update_json(current_stock):
     :param current_stock:
     :return:
     """
+
     try:
         with open('instock.json', 'w') as f:
             json.dump(current_stock, f, indent=2)
@@ -62,38 +63,27 @@ def update_json(current_stock):
 
 
 def multiple_sizes(item):
-    # List of sizes
-    size = item.find("span", {"class": "sizes"}).select("ol > li")
 
     # Check if there are multiple sizes for the item
+    size = item.find("span", {"class": "sizes"}).select("ol > li")
     if len(size) > 1:
         return True
 
 
 def get_info(url: str, headers: dict):
     """
-    Scrapes webpage and puts items in a list of dicts
-
-    https://t5qjjs38p2-dsn.algolia.net/1/indexes/*/queries?x-algolia-agent=Algolia%20for%20JavaScript%20(4.12.1)%3B%20Browser%3B%20react%20(16.14.0)%3B%20react-instantsearch%20(6.22.0)%3B%20JS%20Helper%20(3.7.0)
-    x-algolia-api-key: 3fac962f25c999c5ebea72ae3b602fb5
-    x-algolia-application-id: T5QJJS38P2
-    {"requests":[{"indexName":"production-arc-stack-parent_sku_color","params":"highlightPreTag=%3Cais-highlight-0000000000%3E&highlightPostTag=%3C%2Fais-highlight-0000000000%3E&clickAnalytics=true&filters=availability%3Atrue%20AND%20stack_version%3D3%20AND%20warehouse_code%3AValley-240&query=beta%20ar&facets=%5B%5D&tagFilters="}]}
-    :return:
+    Scrapes webpage and returns dom elements
+    :return: Dom elements
     """
 
     global r
-
     try:
-        # Initialize request session
         s = requests.Session()
         r = s.get(url, headers=headers)
-
-        # Get html elements to parse
         soup = BeautifulSoup(r.content, 'html.parser')
-
-        # Checking if results are blank
         empty_page = soup.find("div", {"class": "Search isEmpty"})
 
+        # Checking if results are blank
         if empty_page:
             cPrint(f"NO RESULTS", current_thread().name, "red")
             log.info("NO RESULTS")
@@ -102,26 +92,24 @@ def get_info(url: str, headers: dict):
             list_of_products = soup.find("div", {"class": "List"})
             return list_of_products
 
-
     # Catch exception and change proxy/user agent
     except requests.ConnectionError as e:
         print(f"Error Connecting To: {build_url()}: {e}")
 
     finally:
-        # Close session
         r.close()
 
 
-def create_product(html_item_list, keyword: str, first_start: bool):
+def create_product(html_item_list, search_key: str, start: bool):
     final_items = {}
     items = []
     try:
         for item in html_item_list.findAll("li", {"class": "TileItem"}):
 
             # Only retrieve items that match the keyword
-            if keyword.upper() in item.text.upper():
+            if search_key.upper() in item.text.upper():
 
-                # Declare elements
+                # Declare variables
                 name = item.find("span", {"class": "title"}).text
                 size = item.find("span", {"class": "sizes"}).text
                 price = item.find("div", {"class": "price"}).find("span").text
@@ -147,10 +135,11 @@ def create_product(html_item_list, keyword: str, first_start: bool):
                         new_product = Product(name, sizes.text, price, link_new, image)
                         items.append(new_product.get_product())
 
-        final_items.setdefault(keyword, items)
+        # Creates key(keyword): pair(list of products) in final_items dictionary
+        final_items.setdefault(search_key, items)
 
-        if not first_start:
-            cPrint(f"{len(items)} Results For {keyword}", current_thread().name, "yellow")
+        if not start:
+            cPrint(f"{len(items)} Results For {search_key}", current_thread().name, "yellow")
             log_request.info(f"Retrieved {len(items)}: {items}")
 
         return final_items
@@ -159,40 +148,42 @@ def create_product(html_item_list, keyword: str, first_start: bool):
         log.error(f"[Method: create_product()] - issue with product list: {e}")
 
 
-def stock_comparitor(current_stock, products: list, first_start: bool, keyword: str):
+def stock_comparitor(current_stock, products: list, start: bool, search_key: str):
     """
     Compares items scraped from website with database
-    :param discord_start: determine whether to push to discord
+    :param search_key:
+    :param start: determine whether to push to discord
+    :param current_stock: List of items stored in a dict for tracking
     :param products: List of items stored in dict scraped from website
-    :param instock: List of items stored in a dict for tracking
     """
     global instock
 
     # First startup will initialize data
-    if first_start:
-        current_stock[keyword] = products[keyword]
+    if start:
+        current_stock[search_key] = products[search_key]
 
-        cPrint(f"Database Built For {keyword.upper()}", current_thread().name, "yellow")
-        log.info(f"Database Built For {keyword.upper()}")
+        cPrint(f"Database Built For {search_key.upper()}", current_thread().name, "yellow")
+        log.info(f"Database Built For {search_key.upper()}")
 
         # Update json file
         update_json(current_stock)
         return current_stock
 
-    for product_items in products[keyword]:
-        if product_items not in current_stock[keyword]:
+    for product in products[search_key]:
+        if product not in current_stock[search_key]:
             try:
+
                 # Append new products to instock list
-                current_stock[keyword].append(product_items)
+                current_stock[search_key].append(product)
 
                 cPrint(
-                    f"[NEW] {product_items['name']} [{product_items['size']}] - [{product_items['price']}] - {product_items['link']}",
+                    f"[NEW] {product['name']} [{product['size']}] - [{product['price']}] - {product['link']}",
                     current_thread().name, "green")
                 log.info(
-                    f"[NEW] [{product_items['name']}] - {product_items['size']} - {product_items['price']} - {product_items['link']}")
+                    f"[NEW] [{product['name']}] - {product['size']} - {product['price']} - {product['link']}")
 
                 # Send discord notification
-                discord_event(product_items, Status.NEW)
+                discord_event(product, Status.NEW)
 
                 # Update json file
                 update_json(current_stock)
@@ -202,20 +193,21 @@ def stock_comparitor(current_stock, products: list, first_start: bool, keyword: 
                 log.error(e)
 
         # Check if instock item has been removed from the website
-        elif check_out_of_stock(current_stock, products, keyword):
+        elif check_out_of_stock(current_stock, products, search_key):
             pass
 
     instock = current_stock
     return instock
 
 
-def check_out_of_stock(current_stock, list_items, keyword):
-    for stock in current_stock[keyword]:
+def check_out_of_stock(current_stock, list_items, search_key):
+    for stock in current_stock[search_key]:
 
         # Check if instock items are no longer in the new list of items from the website
-        if stock not in list_items[keyword]:
+        if stock not in list_items[search_key]:
+
             # Remove the item from instock list
-            current_stock[keyword].remove(stock)
+            current_stock[search_key].remove(stock)
 
             # Update json
             update_json(current_stock)
@@ -273,36 +265,35 @@ def discord_event(product_items, status):
     webhook.add_embed(embed)
 
     try:
-
         # Send webhook
         response = webhook.execute()
         if response.status_code == 200:
             log.info(f"DISCORD SENT: {name} - {new_size} - {link}")
 
-    except Timeout as e:
+    except Exception as e:
         cPrint(e, current_thread().name, "red")
-        log.error(e)
+        log.warn(e)
 
 
-def monitor(keyword, first_start):
+def monitor(search_key: str, start: bool):
     global instock
 
     while True:
         try:
             # Setup dictionary for instock
-            instock.setdefault(keyword, [])
+            instock.setdefault(search_key, [])
 
             # Returns all new products
-            retrieve_products = get_info(build_url(keyword.upper()), used_arc_headers)
+            retrieve_products = get_info(build_url(search_key.upper()), used_arc_headers)
 
             if retrieve_products != 1 and retrieve_products != None:
-                new_products = create_product(retrieve_products, keyword.upper(), first_start)
+                new_products = create_product(retrieve_products, search_key.upper(), start)
 
-                # # Compares new stock with old stock and notify discord
-                stock_comparitor(instock, new_products, first_start, keyword.upper())
+                # Compares new stock with old stock and notify discord
+                stock_comparitor(instock, new_products, start, search_key.upper())
 
                 # Now we want to ping for any new or sold items
-                first_start = False
+                start = False
 
             if retrieve_products is None:
                 cPrint(f"Issue Getting Items From {BASE_URL}. Site May Not Be Supported", current_thread().name, "red")
@@ -310,7 +301,7 @@ def monitor(keyword, first_start):
                 quit()
 
             # Now we want to ping for any new or sold items
-            first_start = False
+            start = False
 
             # Interval for polling
             time.sleep(DELAY)
@@ -326,7 +317,7 @@ if __name__ == '__main__':
     thread_num = 0
     first_start = True
 
-    # Create new thread for each keyword
+    # Create a thread for each keyword
     for keyword in KEYWORD:
         thread_num += 1
         t = Thread(name=f"thread{thread_num}", target=monitor, args=(keyword, first_start))

@@ -8,7 +8,6 @@
 *** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
 *** https://www.markdownguide.org/basic-syntax/#reference-style-links
 -->
-[![Star][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
 [![LinkedIn][linkedin-shield]][linkedin-url]
 
@@ -90,14 +89,16 @@ This is an example of how to list things you need to use the software and how to
 * pip
 * docker
 * wsl2
-  ```sh
-  pip install requirements.txt
-  ```
+* virtualenv
+
 
 ### Installation
 
-1. Install Docker
-2. Make sure Docker Desktop is running
+Setup your virtualenv and then install the requirements
+  ```sh
+  cd monitor
+  pip install -r requirements.txt
+  ```
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
@@ -107,12 +108,12 @@ This is an example of how to list things you need to use the software and how to
 
 For more examples, please refer to the [Documentation](https://example.com)
 
-Configure config files:
+### Configuration:
   ```sh
 - config.py (Dont change)
 
 - config.yml -> Profiles: 
-                    Active: prod (keep this set to 'prod' if you dont plan on testing)
+                    Active: prod (keep this set to 'prod')
                     
 - config-dev.yml (Dont change unless testing)
 
@@ -126,26 +127,29 @@ Configure config files:
 
   ```
 
-**Example**: Update the **_Keywords_**, _**Webhook**_, and _**Delay**_ (Optional)
+## Running Through Terminal
+This is the most straightforward process without having to install docker. You can run the script as usual
 ```sh
-Config:
-  Keywords:
-    - BETA AR
-    - BETA SL JACKET
-  Delay: 60
-  Webhook: ENTER WEBHOOK
-  Url: https://www.usedgear.arcteryx.com
-
+cd monitor/main
+python arcteryx.py
 ```
 
-Docker Build Image
+## Running Through Docker
+
+**Update [Timezone][timezone-url] In Dockerfile**
+
+```sh
+ENV TZ=America/Los_Angeles
+```
+
+Build Image (-t: name your image)
 ```sh
 docker build -t arcteryx
 ```
 
-Docker Run Container (detached and pseudo terminal for colors)
+Run Containers (-d: detached, -t: pseudoterminal, --name: container name, image name)
 ```sh
- docker run -d -t --name monitor arcteryx
+docker run -d -t --name monitor arcteryx
 ```
 <p align="right">(<a href="#top">back to top</a>)</p>
 
@@ -153,9 +157,11 @@ Docker Run Container (detached and pseudo terminal for colors)
 <!-- ROADMAP -->
 ## Roadmap
 
-- [ ] Add Changelog
+- [x] Add Changelog
 - [ ] Add Additional Examples
-- [ ] Refactor To Retrieve Data From Their API Call Which Includes All Of The JSON
+- [ ] Add Email Helper For Errors
+- [ ] Add Proxy Rotation
+- [ ] Add API Call To Retrieve Products
 
 
 See the [open issues](https://github.com/othneildrew/Best-README-Template/issues) for a full list of proposed features (and known issues).
@@ -174,10 +180,10 @@ Project Link: [https://github.com/privatekenny/monitor](https://github.com/priva
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 [forks-url]: https://github.com/othneildrew/Best-README-Template/network/members
-[stars-shield]: https://img.shields.io/github/stars/othneildrew/Best-README-Template.svg?style=for-the-badge
 [stars-url]: https://github.com/
 [issues-shield]: https://img.shields.io/github/issues/othneildrew/Best-README-Template.svg?style=for-the-badge
-[issues-url]: https://github.com/
+[issues-url]: https://github.com/privatekenny/monitors/issues
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com/
 [product-screenshot]: https://user-images.githubusercontent.com/33296651/159418275-0350e4a2-cd01-43a7-b7fa-880108c402e0.png
+[timezone-url]: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones

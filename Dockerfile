@@ -8,4 +8,7 @@ RUN pip install -r requirements.txt
 
 ENV PYTHONUNBUFFERED=1
 
+ENV TZ=America/Los_Angeles
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
 CMD ["python3", "main/arcteryx.py"]
