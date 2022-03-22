@@ -1,2 +1,2 @@
 Profiles:
-  Active: prod
+  Env: prod

@@ -26,7 +26,7 @@ def load():
     global get
 
     # Get The Active Profile
-    active_profile = read(load_config(''))['Profiles']['Active']
+    active_profile = read(load_config(''))['Profiles']['Env']
 
     # YAML Contents
     get = read(load_config(active_profile))
