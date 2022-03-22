@@ -60,9 +60,9 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-[![Docker][product-screenshot]](https://user-images.githubusercontent.com/33296651/159418275-0350e4a2-cd01-43a7-b7fa-880108c402e0.png)
+![Docker][discord-screenshot]
 
-<p align="center">Automating things to make your life easier
+<p align="center">Automating to make your life easier</p>
 
 
 
@@ -91,7 +91,6 @@ This is an example of how to list things you need to use the software and how to
 * wsl2
 * virtualenv
 
-
 ### Installation
 
 Setup your virtualenv and then install the requirements
@@ -99,7 +98,23 @@ Setup your virtualenv and then install the requirements
   cd monitor
   pip install -r requirements.txt
   ```
-
+Make sure your file structure looks something like this:
+```sh
+YOUR_PROJECT PATH/  
+├─ monitor/  
+│  ├─ docs/  
+│  │  ├─ ...
+│  ├─ etc/  
+│  │  ├─ ...
+│  ├─ logs/ 
+│  │  ├─ ...
+│  ├─ main/ 
+│  │  ├─ ...
+│  ├─ models/ 
+│  │  ├─ ...
+│  ├─ tests/ 
+│  │  ├─ ...
+```
 <p align="right">(<a href="#top">back to top</a>)</p>
 
 
@@ -109,6 +124,8 @@ Setup your virtualenv and then install the requirements
 For more examples, please refer to the [Documentation](https://example.com)
 
 ### Configuration:
+
+Update `config-prod.yml` file with desired keywords and discord webhook
   ```sh
 - config.py (Dont change)
 
@@ -135,6 +152,7 @@ python arcteryx.py
 ```
 
 ## Running Through Docker
+[![Docker][product-screenshot]](https://user-images.githubusercontent.com/33296651/159418275-0350e4a2-cd01-43a7-b7fa-880108c402e0.png)
 
 **Update [Timezone][timezone-url] In Dockerfile**
 
@@ -185,5 +203,6 @@ Project Link: [https://github.com/privatekenny/monitor](https://github.com/priva
 [issues-url]: https://github.com/privatekenny/monitors/issues
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com/
-[product-screenshot]: https://user-images.githubusercontent.com/33296651/159418275-0350e4a2-cd01-43a7-b7fa-880108c402e0.png
+[product-screenshot]: https://user-images.githubusercontent.com/33296651/159594672-6d80fe10-7c44-4e8a-b2c2-3fcad86830d2.png
 [timezone-url]: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+[discord-screenshot]: https://user-images.githubusercontent.com/33296651/159594046-e52c738e-9161-4b85-b230-9ad5d4171459.JPG
