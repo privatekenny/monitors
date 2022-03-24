@@ -1,8 +1,5 @@
 from main.arcteryx import *
-from etc.config import *
-from bs4 import BeautifulSoup
 
-BASE_URL = 'https://www.usedgear.arcteryx.com'
 SEARCH = '/shop/search?q='
 used_arc_headers = {
     "authority": "www.usedgear.arcteryx.com",
@@ -16,8 +13,14 @@ used_arc_headers = {
                   "Chrome/98.0.4758.102 Safari/537.36 "
 }
 config.load()
-DELAY = get['Config']['Delay']
-WEBHOOK = config.get['Config']['Webhook']
+DELAY = config.get['config']['delay']
+WEBHOOK = config.get['config']['webhook']
+BASE_URL = config.get['config']['url']
+CONSUMER_KEY = config.get['config']['twitter']['consumer_key']
+CONSUMER_SECRET = config.get['config']['twitter']['consumer_secret']
+ACCESS_TOKEN = config.get['config']['twitter']['access_token']
+ACCESS_SECRET = config.get['config']['twitter']['access_token_secret']
+
 
 def test_stock_comparitor():
     discord_start = False
@@ -29,14 +32,14 @@ def test_stock_comparitor():
             {
                 "name": "Beta AR Pant Men's",
                 "size": "S",
-                "price": "$251.00 - $279.00",
+                "price": "$251.00",
                 "link": "https://www.usedgear.arcteryx.com/p/arcteryx-beta-ar-pant-mens-mens/12702?color=Black",
                 "image": "https://res.cloudinary.com/yerdle/image/upload/w_550,h_550,c_fit/v1559840301/production/partners/4/inventoryItem/278554/yz83dkhd9arvokggdyhy.jpg"
             },
             {
                 "name": "Beta AR Pant Men's",
                 "size": "XXL",
-                "price": "$251.00 - $279.00",
+                "price": "$251.00",
                 "link": "https://www.usedgear.arcteryx.com/p/arcteryx-beta-ar-pant-mens-mens/12702?color=Black",
                 "image": "https://res.cloudinary.com/yerdle/image/upload/w_550,h_550,c_fit/v1559840301/production/partners/4/inventoryItem/278554/yz83dkhd9arvokggdyhy.jpg"
             }
@@ -48,14 +51,14 @@ def test_stock_comparitor():
             {
                 "name": "Beta AR Pant Men's",
                 "size": "S",
-                "price": "$251.00 - $279.00",
+                "price": "$251.00",
                 "link": "https://www.usedgear.arcteryx.com/p/arcteryx-beta-ar-pant-mens-mens/12702?color=Black",
                 "image": "https://res.cloudinary.com/yerdle/image/upload/w_550,h_550,c_fit/v1559840301/production/partners/4/inventoryItem/278554/yz83dkhd9arvokggdyhy.jpg"
             },
             {
                 "name": "Beta AR Pant Men's",
                 "size": "XXL",
-                "price": "$251.00 - $279.00",
+                "price": "$251.00",
                 "link": "https://www.usedgear.arcteryx.com/p/arcteryx-beta-ar-pant-mens-mens/12702?color=Black",
                 "image": "https://res.cloudinary.com/yerdle/image/upload/w_550,h_550,c_fit/v1559840301/production/partners/4/inventoryItem/278554/yz83dkhd9arvokggdyhy.jpg"
             },
@@ -86,7 +89,7 @@ def test_stock_comparitor():
             {
                 "name": "Beta AR Pant Men's",
                 "size": "XXL",
-                "price": "$251.00 - $279.00",
+                "price": "$251.00",
                 "link": "https://www.usedgear.arcteryx.com/p/arcteryx-beta-ar-pant-mens-mens/12702?color=Black",
                 "image": "https://res.cloudinary.com/yerdle/image/upload/w_550,h_550,c_fit/v1559840301/production/partners/4/inventoryItem/278554/yz83dkhd9arvokggdyhy.jpg"
             },
@@ -111,7 +114,7 @@ def test_stock_comparitor():
             {
                 "name": "Beta AR Pant Men's",
                 "size": "XXL",
-                "price": "$251.00 - $279.00",
+                "price": "$251.00",
                 "link": "https://www.usedgear.arcteryx.com/p/arcteryx-beta-ar-pant-mens-mens/12702?color=Black",
                 "image": "https://res.cloudinary.com/yerdle/image/upload/w_550,h_550,c_fit/v1559840301/production/partners/4/inventoryItem/278554/yz83dkhd9arvokggdyhy.jpg"
             }
@@ -130,7 +133,7 @@ def test_check_out_of_stock():
             {
                 "name": "Beta AR Pant Men's",
                 "size": "L",
-                "price": "$251.00 - $279.00",
+                "price": "$251.00",
                 "link": "https://www.usedgear.arcteryx.com/p/arcteryx-beta-ar-pant-mens-mens/12702?color=Black",
                 "image": "https://res.cloudinary.com/yerdle/image/upload/w_550,h_550,c_fit/v1559840301/production/partners/4/inventoryItem/278554/yz83dkhd9arvokggdyhy.jpg"
             },
@@ -248,4 +251,4 @@ def test_create_product():
         ]
     }
 
-    assert create_product(request, keywords) == expected_response
+    assert create_product(request, keywords, False) == expected_response

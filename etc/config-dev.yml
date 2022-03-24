@@ -1,7 +1,13 @@
-Config:
-  Keywords:
+config:
+  keywords:
     - BETA AR PANTS
     - BETA SL
-  Delay: 60
-  Webhook: ENTER WEBHOOK
-  Url: https://www.usedgear.arcteryx.com
+  delay: 60
+  webhook: ENTER WEBHOOK
+  url: https://www.usedgear.arcteryx.com
+  twitter:
+    enabled: False
+    consumer_key: ENTER CONSUMER KEY
+    consumer_secret: ENTER CONSUMER SECRET
+    access_token: ENTER ACCESS TOKEN
+    access_token_secret: ENTER ACCESS SECRET

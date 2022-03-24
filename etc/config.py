@@ -26,7 +26,7 @@ def load():
     global get
 
     # Get The Active Profile
-    active_profile = read(load_config(''))['Profiles']['Env']
+    active_profile = read(load_config(''))['env']
 
     # YAML Contents
     get = read(load_config(active_profile))
@@ -53,17 +53,20 @@ def load():
 
     # Log Active Profile
     log.info(f"Loaded Profile -> {active_profile}")
-    log.info(f"Loaded Config  -> {get['Config']}")
+    log.info(f"Loaded Config  -> {get['config']}")
     cPrint(f"Loaded Profile -> {active_profile}", thread=None, color='cyan')
-    cPrint(f"Loaded Config  -> {get['Config']}", thread=None, color='cyan')
+    cPrint(f"Loaded Config  -> {get['config']}", thread=None, color='cyan')
 
     # Change requests level
     logging.getLogger("urllib3").setLevel(logging.WARNING)
 
 
 def read(path):
-    with open(r'' + path) as file:
-        return yaml.safe_load(file)
+    try:
+        with open(r'' + path) as file:
+            return yaml.safe_load(file)
+    except Exception as e:
+        log.error(e)
 
 
 def load_config(active_profile):
