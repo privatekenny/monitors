@@ -280,7 +280,7 @@ if __name__ == '__main__':
     instock = {}
     threads = []
     thread_num = 0
-    first_start = False
+    first_start = True
 
     # Create a thread for each keyword
     for keyword in KEYWORD:
