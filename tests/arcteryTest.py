@@ -169,8 +169,6 @@ def test_check_out_of_stock():
         ]
     }
 
-    check_out_of_stock(instock, add_product, keyword)
-
     assert check_out_of_stock(instock, add_product, keyword) == True
 
 
