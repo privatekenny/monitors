@@ -1,7 +1,11 @@
 # Changelog
 
+## 1.1 - 2022-03-22
 
-## [1.0] - 2022-03-22
+### Added
+- Added Twitter Option
+
+## 1.0 - 2022-03-22
 
 ### Added
 
@@ -10,4 +14,4 @@
 - Update Dockerfile Timezone
 
 
-[1.0]: https://github.com/
+

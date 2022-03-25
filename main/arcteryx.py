@@ -1,16 +1,17 @@
 from bs4 import BeautifulSoup
 import json
 import requests
-from requests.exceptions import Timeout
-from discord_webhook import DiscordWebhook, DiscordEmbed
+from multiprocessing import Process
 from threading import Thread, current_thread
+from main.tweet import *
+from main.discord import *
 import time
 import sys
 import os
 
 PARENT_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)))
 
-# ROOT PATH /monitor/
+# ROOT PATH
 sys.path.append(PARENT_DIR)
 from etc.config import *
 from etc import config
@@ -19,10 +20,15 @@ from models.Status import Status
 
 art()
 config.load()
-DELAY = config.get['Config']['Delay']
-WEBHOOK = config.get['Config']['Webhook']
-KEYWORD = config.get['Config']['Keywords']
-BASE_URL = config.get['Config']['Url']
+DELAY = config.get['config']['delay']
+WEBHOOK = config.get['config']['webhook']
+KEYWORD = config.get['config']['keywords']
+BASE_URL = config.get['config']['url']
+CONSUMER_KEY = config.get['config']['twitter']['consumer_key']
+CONSUMER_SECRET = config.get['config']['twitter']['consumer_secret']
+ACCESS_TOKEN = config.get['config']['twitter']['access_token']
+ACCESS_SECRET = config.get['config']['twitter']['access_token_secret']
+TWITTER_ENABLED = config.get['config']['twitter']['enabled']
 SEARCH = '/shop/search?q='
 used_arc_headers = {
 
@@ -63,7 +69,6 @@ def update_json(current_stock):
 
 
 def multiple_sizes(item):
-
     # Check if there are multiple sizes for the item
     size = item.find("span", {"class": "sizes"}).select("ol > li")
     if len(size) > 1:
@@ -182,8 +187,17 @@ def stock_comparitor(current_stock, products: list, start: bool, search_key: str
                 log.info(
                     f"[NEW] [{product['name']}] - {product['size']} - {product['price']} - {product['link']}")
 
-                # Send discord notification
-                discord_event(product, Status.NEW)
+                p1 = Process(target=discord_event, args=(product, Status.NEW, WEBHOOK, BASE_URL))
+                p1.start()
+
+                # Option to send to notification to twitter
+                if TWITTER_ENABLED:
+                    p2 = Process(target=tweet_feed,
+                             args=(product, Status.NEW, CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_SECRET))
+                    p2.start()
+
+                # # Send discord notification
+                # discord_event(product, Status.NEW)
 
                 # Update json file
                 update_json(current_stock)
@@ -205,7 +219,6 @@ def check_out_of_stock(current_stock, list_items, search_key):
 
         # Check if instock items are no longer in the new list of items from the website
         if stock not in list_items[search_key]:
-
             # Remove the item from instock list
             current_stock[search_key].remove(stock)
 
@@ -216,63 +229,15 @@ def check_out_of_stock(current_stock, list_items, search_key):
             log.info(f"[SOLD]: {stock['name']} - {stock['size']} - {stock['link']}")
 
             # Send discord notification
-            discord_event(stock, Status.SOLD)
+            p1 = Process(target=discord_event, args=(stock, Status.SOLD, WEBHOOK, BASE_URL))
+            p1.start()
+
+            # Option to send sold out notification to twitter
+            # if TWITTER_ENABLED:
+                # p2 = Process(target=tweet_feed, args=(stock, Status.SOLD, CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_SECRET))
+                # p2.start()
 
             return True
-
-
-def discord_event(product_items, status):
-    """
-    https://github.com/lovvskillz/python-discord-webhook
-    Sends a Discord notification to the specified webhook URL
-    """
-
-    name = product_items['name']
-    link = product_items['link']
-    image = product_items['image']
-    size = product_items['size']
-    price = product_items['price']
-
-    # Determine if there are multiple sizes
-    if isinstance(size, list):
-        new_size = ' - '.join(map(str, size))
-    else:
-        new_size = size
-
-    # Webhook constructor
-    webhook = DiscordWebhook(url=WEBHOOK, rate_limit_retry=True, timeout=10)
-    embed = DiscordEmbed(title=name, url=link, color='03b2f8')
-
-    # Set author info
-    embed.set_author(name='usedgear.arcteryx.com', url=BASE_URL,
-                     icon_url='https://www.usedgear.arcteryx.com/assets/images/logo.png')
-
-    # Set thumbnail image
-    embed.set_thumbnail(url='https://www.usedgear.arcteryx.com/assets/images/logo.png')
-
-    # Set item image
-    embed.set_image(url=image)
-
-    # Set item info
-    embed.add_embed_field(name='Price', value=price)
-    embed.add_embed_field(name='Sizes', value=f'{new_size}')
-    embed.add_embed_field(name='Status', value=status)
-
-    # Set footer info
-    embed.set_timestamp()
-
-    # Add embedded data
-    webhook.add_embed(embed)
-
-    try:
-        # Send webhook
-        response = webhook.execute()
-        if response.status_code == 200:
-            log.info(f"DISCORD SENT: {name} - {new_size} - {link}")
-
-    except Exception as e:
-        cPrint(e, current_thread().name, "red")
-        log.warn(e)
 
 
 def monitor(search_key: str, start: bool):
