@@ -3,8 +3,8 @@ import json
 import requests
 from multiprocessing import Process
 from threading import Thread, current_thread
-from main.tweet import *
-from main.discord import *
+from tweet import *
+from discord import *
 import time
 import sys
 import os
