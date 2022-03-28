@@ -34,7 +34,7 @@ def load():
     # Set Logging
     log = logging.getLogger('1')
     log.setLevel(logging.DEBUG)
-    handler = logging.handlers.TimedRotatingFileHandler(LOG_PATH, when='midnight', backupCount=1)
+    handler = logging.handlers.TimedRotatingFileHandler(LOG_PATH, when='midnight', backupCount=30)
     formatter = logging.Formatter('%(asctime)s :: %(levelname)s :: [%(threadName)s] -> %(message)s',
                                   datefmt='%m/%d/%Y %I:%M:%S %p')
     handler.setFormatter(formatter)
@@ -44,7 +44,7 @@ def load():
     # Set Logging For Requests
     log_request = logging.getLogger('2')
     log_request.setLevel(logging.INFO)
-    handler = logging.handlers.TimedRotatingFileHandler(LOG_PATH2, when='midnight', backupCount=1)
+    handler = logging.handlers.TimedRotatingFileHandler(LOG_PATH2, when='midnight', backupCount=30)
     formatter = logging.Formatter('%(asctime)s :: %(levelname)s :: [%(threadName)s] -> %(message)s',
                                   datefmt='%m/%d/%Y %I:%M:%S %p')
     handler.setFormatter(formatter)
