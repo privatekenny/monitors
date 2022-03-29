@@ -92,14 +92,22 @@ def get_info(url: str, headers: dict):
         if empty_page:
             cPrint(f"NO RESULTS", current_thread().name, "red")
             log.info("NO RESULTS")
-            return 1
+            return False
         else:
+            # NoneType will return if we can't parse the elements correctly
             list_of_products = soup.find("div", {"class": "List"})
-            return list_of_products
+            if list_of_products is not None:
+                return list_of_products
+            else:
+                raise TypeError
 
     # Catch exception and change proxy/user agent
-    except requests.ConnectionError as e:
-        print(f"Error Connecting To: {build_url()}: {e}")
+    except ConnectionError as e:
+        cPrint(f"Error Connecting To: {build_url()}: {e}", current_thread().name, "red")
+        log.error(f"Error Connecting To: {build_url()}: {e}")
+    except TypeError as e:
+        cPrint(f"Issue Getting Items From {BASE_URL}. Site May Not Be Supported", current_thread().name, "red")
+        log.error(f"Issue Getting Items From {BASE_URL}. Site May Not Be Supported: {e}")
 
     finally:
         r.close()
@@ -193,7 +201,7 @@ def stock_comparitor(current_stock, products: list, start: bool, search_key: str
                 # Option to send to notification to twitter
                 if TWITTER_ENABLED:
                     p2 = Process(target=tweet_feed,
-                             args=(product, Status.NEW, CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_SECRET))
+                                 args=(product, Status.NEW, CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_SECRET))
                     p2.start()
 
                 # # Send discord notification
@@ -251,7 +259,7 @@ def monitor(search_key: str, start: bool):
             # Returns all new products
             retrieve_products = get_info(build_url(search_key.upper()), used_arc_headers)
 
-            if retrieve_products != 1 and retrieve_products != None:
+            if retrieve_products:
                 new_products = create_product(retrieve_products, search_key.upper(), start)
 
                 # Compares new stock with old stock and notify discord
@@ -259,11 +267,6 @@ def monitor(search_key: str, start: bool):
 
                 # Now we want to ping for any new or sold items
                 start = False
-
-            if retrieve_products is None:
-                cPrint(f"Issue Getting Items From {BASE_URL}. Site May Not Be Supported", current_thread().name, "red")
-                log.error(f"Issue Getting Items From {BASE_URL}. Site May Not Be Supported")
-                quit()
 
             # Now we want to ping for any new or sold items
             start = False
@@ -283,6 +286,7 @@ if __name__ == '__main__':
     first_start = True
 
     # Create a thread for each keyword
+    # Each thread will share same instock list
     for keyword in KEYWORD:
         thread_num += 1
         t = Thread(name=f"thread{thread_num}", target=monitor, args=(keyword, first_start))
