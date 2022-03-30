@@ -57,5 +57,5 @@ def discord_event(product_items, status, channel_webhook, base_url):
         if response.status_code == 200:
             log.info(f"DISCORD SENT: {name} - {new_size} - {link}")
     except Exception as e:
-        cPrint(e, "red")
+        cPrint(e, thread=None, color="red")
         log.warn(e)

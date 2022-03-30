@@ -22,6 +22,33 @@ log = logging.getLogger('1')
 log_request = logging.getLogger('2')
 
 
+def get_status(property):
+    """
+    get config.yml properties
+    :param property:
+    :return:
+    """
+    with open(os.path.join(PARENT_DIR, 'etc/config.yml'), 'r') as c:
+        config = yaml.load(c, Loader=yaml.FullLoader)
+        return config[property]
+
+
+def change_status(property, value):
+    """
+    set config.yml properties
+    :param property:
+    :param value:
+    :return:
+    """
+    with open(os.path.join(PARENT_DIR, 'etc/config.yml'), 'r') as c:
+        config = yaml.load(c, Loader=yaml.FullLoader)
+
+    config[property] = value
+
+    with open(os.path.join(PARENT_DIR, 'etc/config.yml'), 'w') as f:
+        yaml.dump(config, f)
+
+
 def load():
     global get
 
@@ -51,12 +78,6 @@ def load():
     handler.rotator = GZipRotator()
     log_request.addHandler(handler)
 
-    # Log Active Profile
-    log.info(f"Loaded Profile -> {active_profile}")
-    log.info(f"Loaded Config  -> {get['config']}")
-    cPrint(f"Loaded Profile -> {active_profile}", thread=None, color='cyan')
-    cPrint(f"Loaded Config  -> {get['config']}", thread=None, color='cyan')
-
     # Change requests level
     logging.getLogger("urllib3").setLevel(logging.WARNING)
 
@@ -84,7 +105,7 @@ def date_time():
 
 
 # colored printing
-def cPrint(value, thread, color):
+def cPrint(value, thread=None, color=None):
     if thread:
         string = f"{date_time()} :: [{thread}] -> {value}"
         text = colored(string, color)

@@ -3,8 +3,6 @@ import json
 import requests
 from multiprocessing import Process
 from threading import Thread, current_thread
-from tweet import *
-from discord import *
 import time
 import sys
 import os
@@ -13,12 +11,15 @@ PARENT_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)))
 
 # ROOT PATH
 sys.path.append(PARENT_DIR)
-from etc.config import *
 from etc import config
 from models.Product import Product
 from models.Status import Status
+from main.tweet import *
+from main.discord import *
 
-art()
+instock = {}
+first_start = True
+
 config.load()
 DELAY = config.get['config']['delay']
 WEBHOOK = config.get['config']['webhook']
@@ -61,7 +62,7 @@ def update_json(current_stock):
     """
 
     try:
-        with open('instock.json', 'w') as f:
+        with open('main/instock.json', 'w') as f:
             json.dump(current_stock, f, indent=2)
             f.close()
     except Exception as e:
@@ -74,6 +75,14 @@ def multiple_sizes(item):
     if len(size) > 1:
         return True
 
+def is_active():
+    status = get_status('monitor')
+    if status != 'Stopped':
+        return True
+    else:
+        cPrint("STOPPED TASKS", thread=current_thread().getName(), color="red")
+        quit()
+
 
 def get_info(url: str, headers: dict):
     """
@@ -81,7 +90,6 @@ def get_info(url: str, headers: dict):
     :return: Dom elements
     """
 
-    global r
     try:
         s = requests.Session()
         r = s.get(url, headers=headers)
@@ -110,7 +118,7 @@ def get_info(url: str, headers: dict):
         log.error(f"Issue Getting Items From {BASE_URL}. Site May Not Be Supported: {e}")
 
     finally:
-        r.close()
+        s.close()
 
 
 def create_product(html_item_list, search_key: str, start: bool):
@@ -153,7 +161,7 @@ def create_product(html_item_list, search_key: str, start: bool):
 
         if not start:
             cPrint(f"{len(items)} Results For {search_key}", current_thread().name, "yellow")
-            log_request.info(f"Retrieved {len(items)}: {items}")
+            log_request.info(f"{len(items)} Results For {search_key}")
 
         return final_items
 
@@ -242,8 +250,8 @@ def check_out_of_stock(current_stock, list_items, search_key):
 
             # Option to send sold out notification to twitter
             # if TWITTER_ENABLED:
-                # p2 = Process(target=tweet_feed, args=(stock, Status.SOLD, CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_SECRET))
-                # p2.start()
+            # p2 = Process(target=tweet_feed, args=(stock, Status.SOLD, CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_SECRET))
+            # p2.start()
 
             return True
 
@@ -252,43 +260,59 @@ def monitor(search_key: str, start: bool):
     global instock
 
     while True:
-        try:
-            # Setup dictionary for instock
-            instock.setdefault(search_key, [])
+        if is_active():
+            try:
+                # Setup dictionary for instock
+                instock.setdefault(search_key, [])
 
-            # Returns all new products
-            retrieve_products = get_info(build_url(search_key.upper()), used_arc_headers)
+                if is_active():
+                    # Returns all new products
+                    retrieve_products = get_info(build_url(search_key.upper()), used_arc_headers)
 
-            if retrieve_products:
-                new_products = create_product(retrieve_products, search_key.upper(), start)
+                if retrieve_products:
+                    if is_active():
+                        new_products = create_product(retrieve_products, search_key.upper(), start)
 
-                # Compares new stock with old stock and notify discord
-                stock_comparitor(instock, new_products, start, search_key.upper())
+                    if is_active():
+                        # Compares new stock with old stock and notify discord
+                        stock_comparitor(instock, new_products, start, search_key.upper())
+
+                    # Now we want to ping for any new or sold items
+                    start = False
 
                 # Now we want to ping for any new or sold items
                 start = False
 
-            # Now we want to ping for any new or sold items
-            start = False
+                # Interval for polling
+                time.sleep(DELAY)
 
-            # Interval for polling
-            time.sleep(DELAY)
-
-        except Exception as e:
-            cPrint(e, current_thread().name, "red")
-            log.error(e)
+            except Exception as e:
+                cPrint(e, current_thread().name, "red")
+                log.error(e)
 
 
-if __name__ == '__main__':
-    instock = {}
-    threads = []
+def main():
+    art()
+    # Log Active Profile
+    log.info(f"Loaded Profile -> {get_status('env')}")
+    log.info(f"Loaded Config  -> {config.get['config']}")
+    cPrint(f"Loaded Profile -> {get_status('env')}", thread=current_thread().getName(), color='cyan')
+    cPrint(f"Loaded Config  -> {config.get['config']}", thread=current_thread().getName(), color='cyan')
+
+    global first_start
+    tasks = []
     thread_num = 0
-    first_start = True
 
     # Create a thread for each keyword
     # Each thread will share same instock list
     for keyword in KEYWORD:
         thread_num += 1
-        t = Thread(name=f"thread{thread_num}", target=monitor, args=(keyword, first_start))
-        threads.append(t)
+        task = Thread(name=f"Thread-{thread_num}", target=monitor, args=(keyword, first_start))
+        tasks.append(task)
+    for t in tasks:
         t.start()
+
+
+
+
+
