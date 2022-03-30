@@ -28,9 +28,15 @@ def get_status(property):
     :param property:
     :return:
     """
-    with open(os.path.join(PARENT_DIR, 'etc/config.yml'), 'r') as c:
-        config = yaml.load(c, Loader=yaml.FullLoader)
-        return config[property]
+    try:
+        with open(os.path.join(PARENT_DIR, 'etc/config.yml'), 'r') as c:
+            config = yaml.load(c, Loader=yaml.FullLoader)
+            return config[property]
+    except Exception as e:
+        print(e)
+        log.error(e)
+    finally:
+        c.close()
 
 
 def change_status(property, value):
@@ -40,13 +46,19 @@ def change_status(property, value):
     :param value:
     :return:
     """
-    with open(os.path.join(PARENT_DIR, 'etc/config.yml'), 'r') as c:
-        config = yaml.load(c, Loader=yaml.FullLoader)
+    try:
+        with open(os.path.join(PARENT_DIR, 'etc/config.yml'), 'r') as c:
+            config = yaml.load(c, Loader=yaml.FullLoader)
 
-    config[property] = value
+        config[property] = value
 
-    with open(os.path.join(PARENT_DIR, 'etc/config.yml'), 'w') as f:
-        yaml.dump(config, f)
+        with open(os.path.join(PARENT_DIR, 'etc/config.yml'), 'w') as f:
+            yaml.dump(config, f)
+    except Exception as e:
+        cPrint(e)
+        log(e)
+    finally:
+        c.close(), f.close()
 
 
 def load():

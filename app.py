@@ -25,7 +25,6 @@ def dashboard():
                     newItems.append(items)
         url = config.get['config']['url']
         stores.append(url)
-        print(stores)
     except ValueError:
         print("No Items")
         pass
@@ -58,7 +57,6 @@ def stop():
 def start():
     change_status('monitor', 'Active')
     change_status('startTime', date_time())
-    cPrint("STARTING MONITOR", thread=None, color="green")
     main()
     return redirect('/')
 
