@@ -84,7 +84,7 @@ def date_time():
 
 
 # colored printing
-def cPrint(value, thread, color):
+def cPrint(value, thread=None, color=None):
     if thread:
         string = f"{date_time()} :: [{thread}] -> {value}"
         text = colored(string, color)

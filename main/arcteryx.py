@@ -3,16 +3,17 @@ import json
 import requests
 from multiprocessing import Process
 from threading import Thread, current_thread
-from tweet import *
-from discord import *
 import time
 import sys
 import os
+import asyncio
 
 PARENT_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)))
 
 # ROOT PATH
 sys.path.append(PARENT_DIR)
+from main.tweet import *
+from main.discord import *
 from etc.config import *
 from etc import config
 from models.Product import Product
@@ -195,13 +196,13 @@ def stock_comparitor(current_stock, products: list, start: bool, search_key: str
                 log.info(
                     f"[NEW] [{product['name']}] - {product['size']} - {product['price']} - {product['link']}")
 
-                p1 = Process(target=discord_event, args=(product, Status.NEW, WEBHOOK, BASE_URL))
+                p1 = Process(target=discord_event, args=(product, Status.NEW.value, WEBHOOK, BASE_URL))
                 p1.start()
 
                 # Option to send to notification to twitter
                 if TWITTER_ENABLED:
                     p2 = Process(target=tweet_feed,
-                                 args=(product, Status.NEW, CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_SECRET))
+                                 args=(product, Status.NEW.value, CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_SECRET))
                     p2.start()
 
                 # # Send discord notification
@@ -209,6 +210,7 @@ def stock_comparitor(current_stock, products: list, start: bool, search_key: str
 
                 # Update json file
                 update_json(current_stock)
+
 
             except Exception as e:
                 cPrint(e, current_thread().name, "red")
@@ -233,11 +235,12 @@ def check_out_of_stock(current_stock, list_items, search_key):
             # Update json
             update_json(current_stock)
 
-            cPrint(f"[SOLD] {stock['name']} [{stock['size']}] - {stock['link']}", current_thread().name, "red")
+            cPrint(f"[SOLD] {stock['name']} [{stock['size']}] [{stock['price']}] - {stock['link']}",
+                   current_thread().name, "red")
             log.info(f"[SOLD]: {stock['name']} - {stock['size']} - {stock['link']}")
 
             # Send discord notification
-            p1 = Process(target=discord_event, args=(stock, Status.SOLD, WEBHOOK, BASE_URL))
+            p1 = Process(target=discord_event, args=(stock, Status.SOLD.value, WEBHOOK, BASE_URL))
             p1.start()
 
             # Option to send sold out notification to twitter
@@ -291,4 +294,5 @@ if __name__ == '__main__':
         thread_num += 1
         t = Thread(name=f"thread{thread_num}", target=monitor, args=(keyword, first_start))
         threads.append(t)
-        t.start()
+    for thread in threads:
+        thread.start()
